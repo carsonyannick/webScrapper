@@ -1,7 +1,7 @@
 loopCount=$1
 outputFile=$2
 
-# first argument, the # of Names generated
+# first argument, the # of names to be generated
 if [ -z "$1" ]
 then
     loopCount=99999
@@ -32,3 +32,37 @@ do
     fi
     loopCount=$[$loopCount-1]
 done
+
+# check for duplicate names
+while read name; do
+match=0
+    echo $name
+    while read line; do
+        if [ "$name" == "$line" ]; then
+            match=$[$match+1]
+        fi
+    done < $output
+    if [ $match -gt 1 ]; then
+        echo $name "match #" $match
+        sed -i "/$name/d" $output
+        echo $name >> $output
+    fi
+done < $output
+
+# check for duplicate hash
+while read name; do
+match=0
+    echo $name
+    nameHash=$(echo $name | md5sum | sed 's/\([0-9a-f]*\).*/\1/')
+    while read line; do
+        lineHash=$(echo $line | md5sum | sed 's/\([0-9a-f]*\).*/\1/')
+        if [ "$name" == "$line" ]; then
+            match=$[$match+1]
+        fi
+    done < $output
+    if [ $match -gt 1 ]; then
+        echo $name "match #" $match
+        sed -i "/$name/d" $output
+        echo $name >> $output
+    fi
+done < $output
